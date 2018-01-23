@@ -45,6 +45,14 @@ def get_args():
 
 if __name__ == '__main__':
 
+    # Proper terminal size when displaying --help
+    try:
+        from os import environ
+        from shutil import get_terminal_size
+        environ['COLUMNS'] = str(get_terminal_size().columns)
+    except:
+        pass
+
     # Command line arguments
     config = get_args()
 
