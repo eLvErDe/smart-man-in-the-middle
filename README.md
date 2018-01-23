@@ -25,3 +25,8 @@ Optional arguments:
   * -ls original_str replacement_str, --left-sub original_str replacement_str  
                           Substitute str1 with str2 in message coming from left  
                           side (default: [])
+
+# TODO
+
+  * Proper handling of SIGTERM, for some reason it's not behaving as the asyncio doc says it will
+  * I know it's half python3.4 (coroutine/yield), half python3.5 (unpacking in loggers), move to async/await syntax
