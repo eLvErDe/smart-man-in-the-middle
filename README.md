@@ -6,7 +6,8 @@ Usage: smart-man-in-the-middle.py [-h] [-d] -l 0.0.0.0:8844 -r
                                   remote-destination.com:9955
                                   [-lk /path/to/left-side.key]
                                   [-lc /path/to/left-side.crt]
-                                  [-ls original_str replacement_str]
+                                  -ew 0x0011223344556677889900112233445566778899
+                                  [-ef fees]
 
 Optional arguments:
   * -h, --help            show this help message and exit
@@ -22,9 +23,11 @@ Optional arguments:
   * -lc /path/to/left-side.crt, --left-cert /path/to/left-side.crt  
                           Path to SSL public certificate file for left proxy  
                           side (default: None)
-  * -ls original_str replacement_str, --left-sub original_str replacement_str  
-                          Substitute str1 with str2 in message coming from left  
-                          side (default: [])
+  * -ew 0x0011223344556677889900112233445566778899,, --eth-wallet 0x0011223344556677889900112233445566778899  
+                          Your Ethereum wallet address  default: None)
+                          (default: None)
+  * -ef fees, --eth-fees-worker fees  
+                          An alternate worker name when doing subtitution (default: None)
 
 # TODO
 
