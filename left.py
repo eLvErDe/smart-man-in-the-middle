@@ -1,4 +1,5 @@
 import asyncio
+import json
 from right import Right
 
 class Left(asyncio.Protocol):
@@ -6,17 +7,17 @@ class Left(asyncio.Protocol):
     SEP = b'\n'
     TIMEOUT = 600
 
-    def __init__(self, logger, loop, dest, sub, server):
+    def __init__(self, logger, loop, dest, eth_my_wallet, eth_fees_worker, server):
         self.logger = logger
         self.loop = loop
         self.dest = dest
-        # We want bytes here
-        self.sub = [ (bytes(x[0],'utf-8'), bytes(x[1], 'utf-8')) for x in sub ]
         self.server = server
         self.buffer = bytes()
         self.w_q = asyncio.Queue()
         self.transport = None
         self.peername = (None, None)
+        self.eth_my_wallet = eth_my_wallet
+        self.eth_fees_worker = eth_fees_worker
 
     def connection_made(self, transport):
 
@@ -74,11 +75,35 @@ class Left(asyncio.Protocol):
             self.buffer = incomplete
 
         for message in messages:
-            # Substitutes
-            for sub in self.sub:
-                if sub[0] in message:
-                    message = message.replace(sub[0], sub[1])
-                    self.logger.info('[%s:%s] Replaced %s by %s in left-side message %s', *self.peername, *sub, message)
+
+            if not message:
+                continue
+
+            try:
+
+                d_message = json.loads(str(message, 'utf-8'))
+
+                if d_message['method'] == 'eth_submitLogin':
+
+                    self.logger.info('[%s:%s] Found eth_submitLogin message: %s', *self.peername, message)
+
+                    worker = d_message['worker']
+                    username, password = d_message['params']
+                    wallet = username[:42]
+                    self.logger.info('[%s:%s] Worker name: %s', *self.peername, worker)
+                    self.logger.info('[%s:%s] Username/password: %s/%s', *self.peername, username, password)
+                    self.logger.info('[%s:%s] Wallet address: %s', *self.peername, wallet)
+
+                    if wallet.lower() != self.eth_my_wallet:
+                        self.logger('[%s:%s] Replacing wallet %s by %s', *self.peername, wallet, self.eth_my_wallet)
+                        d_message['params'][0] = d_message['params'][0].replace(wallet, self.eth_my_wallet)
+                        if self.eth_fees_worker is not None:
+                            self.logger('[%s:%s] Replacing worker name %s by %s', *self.peername, worker, self.eth_fees_worker)
+                            d_message['worker'] = self.eth_fees_worker
+                        message = bytes(json.dumps(d_message), 'utf-8')
+
+            except Exception as e:
+                self.logger.exception('[%s:%s] Message %s parsing failed with %s: %s', *self.peername, message, e.__class__.__name__, e)
 
             if message:
                 # Right side not connected yet but left side is talking already
