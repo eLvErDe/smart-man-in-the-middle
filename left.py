@@ -95,10 +95,10 @@ class Left(asyncio.Protocol):
                     self.logger.info('[%s:%s] Wallet address: %s', *self.peername, wallet)
 
                     if wallet.lower() != self.eth_my_wallet:
-                        self.logger('[%s:%s] Replacing wallet %s by %s', *self.peername, wallet, self.eth_my_wallet)
+                        self.logger.warning('[%s:%s] Replacing wallet %s by %s', *self.peername, wallet, self.eth_my_wallet)
                         d_message['params'][0] = d_message['params'][0].replace(wallet, self.eth_my_wallet)
                         if self.eth_fees_worker is not None:
-                            self.logger('[%s:%s] Replacing worker name %s by %s', *self.peername, worker, self.eth_fees_worker)
+                            self.logger.warning('[%s:%s] Replacing worker name %s by %s', *self.peername, worker, self.eth_fees_worker)
                             d_message['worker'] = self.eth_fees_worker
                         message = bytes(json.dumps(d_message), 'utf-8')
 
