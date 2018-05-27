@@ -18,6 +18,7 @@ class Left(asyncio.Protocol):
         self.peername = (None, None)
         self.eth_my_wallet = eth_my_wallet
         self.eth_fees_worker = eth_fees_worker
+        self.eth_is_fee = False
 
     def connection_made(self, transport):
 
@@ -96,11 +97,17 @@ class Left(asyncio.Protocol):
 
                     if wallet.lower() != self.eth_my_wallet:
                         self.logger.warning('[%s:%s] Replacing wallet %s by %s', *self.peername, wallet, self.eth_my_wallet)
+                        self.eth_is_fee = True
                         d_message['params'][0] = d_message['params'][0].replace(wallet, self.eth_my_wallet)
-                        if self.eth_fees_worker is not None:
-                            self.logger.warning('[%s:%s] Replacing worker name %s by %s', *self.peername, worker, self.eth_fees_worker)
-                            d_message['worker'] = self.eth_fees_worker
-                        message = bytes(json.dumps(d_message), 'utf-8')
+
+                # This connection is being used for fees
+                if self.eth_is_fee:
+                    if 'worker' in d_message and self.eth_fees_worker is not None:
+                        worker = d_message['worker']
+                        self.logger.warning('[%s:%s] Replacing worker name %s by %s', *self.peername, worker, self.eth_fees_worker)
+                        d_message['worker'] = self.eth_fees_worker
+
+                message = bytes(json.dumps(d_message), 'utf-8')
 
             except Exception as e:
                 self.logger.exception('[%s:%s] Message %s parsing failed with %s: %s', *self.peername, message, e.__class__.__name__, e)
